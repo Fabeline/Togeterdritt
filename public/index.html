@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>togeterdritt.no – hvordan var reisen, egentlig?</title>
+<meta name="description" content="Anonym klagemur for tog. Trykk på et symbol og se hvor ille det står til.">
+<meta name="theme-color" content="#FFD60A">
+<meta property="og:title" content="togeterdritt.no">
+<meta property="og:description" content="Hvordan var reisen, egentlig? Trykk på et symbol og se dagens dritt-indeks.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%23FFD60A'/%3E%3Cpath d='M24 6c-9 0-15 6-15 14 0 5 2 8 5 10v8h20v-8c3-2 5-5 5-10 0-8-6-14-15-14z' fill='%23fff' stroke='%23111' stroke-width='3'/%3E%3Ccircle cx='18' cy='21' r='4' fill='%23111'/%3E%3Ccircle cx='30' cy='21' r='4' fill='%23111'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gul: #FFD60A; --svart: #111; --hvit: #fff; --rod: #FF6B4A; --bla: #7FD6FF;
+    --krem: #F2EFE6; --merke: #B3261E;
+    --display: 'Archivo Black', system-ui, sans-serif;
+    --body: 'Archivo', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--gul); color: var(--svart); font-family: var(--body); }
+  body.mork { background: var(--svart); }
+  a { color: inherit; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .app { max-width: 440px; margin: 0 auto; min-height: 100dvh; padding: 20px 20px calc(28px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 18px; }
+  .view[hidden] { display: none !important; }
+  .view { display: flex; flex-direction: column; gap: 18px; flex: 1; }
+
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-family: var(--display); font-size: 20px; letter-spacing: -0.5px; text-decoration: none; }
+  .logo b { color: var(--merke); font-weight: inherit; }
+  .pill { font-weight: 800; font-size: 14px; padding: 10px 14px; min-height: 44px; display: inline-flex; align-items: center; border: 2.5px solid var(--svart); border-radius: 999px; background: var(--hvit); text-decoration: none; }
+  .mork .pill { background: transparent; border-color: var(--hvit); color: var(--hvit); }
+  .mork .logo { color: var(--hvit); } .mork .logo b { color: var(--gul); }
+
+  .kicker { margin: 0; font-weight: 800; font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; }
+  h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 40px; line-height: 1; letter-spacing: -1.5px; }
+  h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 22px; letter-spacing: -0.5px; }
+
+  .felt { display: flex; flex-direction: column; gap: 6px; }
+  .felt label { font-weight: 800; font-size: 14px; }
+  select { height: 50px; border: 2.5px solid var(--svart); border-radius: 12px; padding: 0 12px; background: var(--hvit); font: 600 16px var(--body); color: var(--svart); }
+
+  .symboler { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .symbol { height: 124px; border: 3px solid var(--svart); border-radius: 18px; background: var(--hvit); box-shadow: 5px 5px 0 var(--svart); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; transition: transform .08s, box-shadow .08s, background .08s; }
+  .symbol span { font-weight: 800; font-size: 15px; }
+  .symbol[aria-pressed="true"] { background: var(--rod); box-shadow: 0 0 0 var(--svart); transform: translate(5px, 5px); }
+  .symbol:focus-visible, .cta:focus-visible, .pill:focus-visible { outline: 3px solid var(--svart); outline-offset: 3px; }
+
+  .cta { margin-top: auto; height: 60px; border: 0; border-radius: 16px; background: var(--svart); color: var(--gul); display: flex; align-items: center; justify-content: center; font-family: var(--display); font-size: 19px; text-decoration: none; width: 100%; }
+  .cta:disabled { opacity: .55; cursor: not-allowed; }
+  .cta.gul { background: var(--gul); color: var(--svart); margin-top: 0; }
+  .cta.omriss { background: transparent; border: 2.5px solid var(--hvit); color: var(--hvit); font: 800 16px var(--body); height: 52px; margin-top: 0; }
+  .feil { margin: 0; font-weight: 800; color: var(--merke); min-height: 1.2em; }
+
+  /* Takk */
+  .takk { color: var(--hvit); text-align: center; align-items: center; }
+  .takk-ikon { margin: 30px auto 6px; width: 170px; height: 170px; border-radius: 40px; background: var(--gul); border: 3px solid var(--hvit); box-shadow: 8px 8px 0 var(--rod); display: flex; align-items: center; justify-content: center; transform: rotate(-6deg); }
+  .takk-ikon svg { width: 112px; height: 112px; }
+  .takk .kicker { color: var(--gul); }
+  .takk h1 { font-size: 36px; line-height: 1.05; letter-spacing: -1px; }
+  .takk p.tekst { margin: 0; font-size: 17px; line-height: 1.45; color: #E8E8E8; max-width: 320px; }
+  .takk strong { color: var(--hvit); }
+  .takk .knapper { margin-top: auto; width: 100%; display: flex; flex-direction: column; gap: 12px; }
+
+  /* Statistikk */
+  .kort { background: var(--hvit); border: 3px solid var(--svart); border-radius: 22px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+  .indeks { background: var(--svart); color: var(--hvit); border-color: var(--svart); box-shadow: 6px 6px 0 var(--rod); }
+  .indeks .kicker { color: var(--gul); letter-spacing: 1px; font-size: 14px; }
+  .tall { display: flex; align-items: baseline; gap: 8px; }
+  .tall .stor { font-family: var(--display); font-size: 88px; line-height: .9; letter-spacing: -3px; }
+  .tall .av { font-weight: 800; font-size: 22px; color: #BDBDBD; }
+  .maaler { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; }
+  .maaler i { height: 14px; border-radius: 4px; background: #333; }
+  .maaler i.p { background: var(--gul); } .maaler i.h { background: var(--rod); }
+  .indeks p { margin: 0; font-size: 17px; line-height: 1.4; }
+  .rad { display: flex; flex-direction: column; gap: 5px; }
+  .rad .topp { display: flex; justify-content: space-between; font-weight: 800; font-size: 15px; }
+  .bar { height: 18px; border: 2px solid var(--svart); border-radius: 6px; background: var(--krem); overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--svart); transition: width .5s; }
+  .verst { background: var(--rod); flex-direction: row; align-items: center; gap: 16px; }
+  .verst p { margin: 0; }
+  .verst .navn { font-family: var(--display); font-size: 24px; line-height: 1.05; }
+  .fakta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .fakta div { background: var(--hvit); border: 3px solid var(--svart); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 6px; }
+  .fakta b { font-family: var(--display); font-weight: 400; font-size: 34px; line-height: 1; }
+  .fakta span { font-size: 14px; line-height: 1.35; }
+  .uke { height: 150px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; align-items: end; }
+  .uke div { display: flex; flex-direction: column; align-items: center; gap: 6px; font-weight: 800; font-size: 13px; }
+  .uke i { width: 100%; border: 2px solid var(--svart); border-radius: 6px 6px 0 0; background: var(--gul); }
+  .uke i.h { background: var(--rod); } .uke i.s { background: var(--svart); } .uke i.tom { background: var(--krem); border-style: dashed; }
+  .smaa { margin: 0; font-size: 13px; line-height: 1.4; text-align: center; }
+  .tom-tekst { margin: 0; font-size: 15px; line-height: 1.4; }
+  .smaa a, .lenke { font-weight: 800; }
+  .lenke { text-align: center; font-size: 15px; padding: 10px; }
+
+  /* Om */
+  .om p { margin: 0; font-size: 17px; line-height: 1.5; }
+  .om .ingress { font-size: 19px; }
+  .om h1 { font-size: 38px; }
+  .miljo { display: flex; flex-direction: column; gap: 12px; margin: 0; }
+  .miljo div { display: flex; flex-direction: column; gap: 2px; padding-bottom: 12px; border-bottom: 2px dashed #CFCFCF; }
+  .miljo div:last-child { border-bottom: 0; padding-bottom: 0; }
+  .miljo dt { font-weight: 800; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
+  .miljo dd { margin: 0; font-size: 16px; line-height: 1.4; }
+  .sitat { background: var(--svart); color: var(--hvit); border-color: var(--svart); box-shadow: 6px 6px 0 var(--rod); }
+  .sitat p { font-family: var(--display); font-size: 24px; line-height: 1.15; }
+  .signatur { font-weight: 800; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-dod" viewBox="0 0 48 48"><g fill="none" stroke="#111" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"><path d="M24 5c-9 0-16 6-16 15 0 5 2 9 6 11v8h20v-8c4-2 6-6 6-11 0-9-7-15-16-15z" fill="#fff"/><circle cx="18" cy="21" r="4.5" fill="#111"/><circle cx="30" cy="21" r="4.5" fill="#111"/><path d="M24 27l-2.5 4h5z" fill="#111"/><path d="M19 39v-5M24 39v-5M29 39v-5"/></g></symbol>
+    <symbol id="i-dritt" viewBox="0 0 48 48"><g fill="none" stroke="#111" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"><path d="M25 5c-1 4 5 5 5 9 0 1-1 2-2 2h2c4 0 7 2 7 6 0 1 0 2-1 2 4 1 7 4 7 8 0 5-4 8-9 8H14c-5 0-9-3-9-8 0-4 3-7 7-8-1 0-1-1-1-2 0-4 3-6 7-6h1c-1-1-1-2-1-3 0-4 5-6 7-8z" fill="#9A6234"/><circle cx="19" cy="27" r="3" fill="#fff"/><circle cx="29" cy="27" r="3" fill="#fff"/><circle cx="19" cy="27" r="1.2" fill="#111" stroke="none"/><circle cx="29" cy="27" r="1.2" fill="#111" stroke="none"/><path d="M18 34c3 3 9 3 12 0"/></g></symbol>
+    <symbol id="i-forsinket" viewBox="0 0 48 48"><g fill="none" stroke="#111" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"><path d="M5 38h33c3 0 5-2 5-4"/><circle cx="28" cy="24" r="12" fill="#fff"/><path d="M28 24m-6 0a6 6 0 1 0 6-6a3 3 0 1 0 3 3"/><path d="M14 38c-4-2-5-8-2-12"/><path d="M12 26l-3-7M14 25l1-7"/><circle cx="9" cy="18" r="1.5" fill="#111"/><circle cx="15" cy="17" r="1.5" fill="#111"/></g></symbol>
+    <symbol id="i-sild" viewBox="0 0 48 48"><g fill="none" stroke="#111" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"><path d="M4 16c5-6 14-7 22-3l6-5v16l-6-5c-8 4-17 3-22-3z" fill="#fff"/><path d="M14 30c5-6 14-7 22-3l6-5v16l-6-5c-8 4-17 3-22-3z" fill="#fff"/><circle cx="10" cy="15" r="1.3" fill="#111"/><circle cx="20" cy="29" r="1.3" fill="#111"/></g></symbol>
+    <symbol id="i-buss" viewBox="0 0 48 48"><g fill="none" stroke="#111" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"><rect x="8" y="7" width="32" height="30" rx="5" fill="#fff"/><rect x="12" y="11" width="24" height="11" rx="2"/><path d="M8 29h32"/><circle cx="15" cy="33" r="1.5" fill="#111"/><circle cx="33" cy="33" r="1.5" fill="#111"/><path d="M13 37v4M35 37v4"/></g></symbol>
+    <symbol id="i-greit" viewBox="0 0 48 48"><g fill="none" stroke="#111" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"><circle cx="24" cy="24" r="18" fill="#fff"/><path d="M14 19l7 2M34 19l-7 2"/><path d="M15 23h6M27 23h6"/><circle cx="20" cy="23" r="1.5" fill="#111"/><circle cx="32" cy="23" r="1.5" fill="#111"/><path d="M18 33h12"/></g></symbol>
+  </defs>
+</svg>
+
+<main class="app">
+
+  <!-- 1 · Vurder reisen -->
+  <section class="view" id="v-stem">
+    <header>
+      <a class="logo" href="/"><svg width="30" height="30" aria-hidden="true"><use href="#i-dod"/></svg>togeterdritt<b>.no</b></a>
+      <a class="pill" href="#statistikk" data-go="stats">Statistikk</a>
+    </header>
+    <div class="felt" style="gap:6px">
+      <p class="kicker">Anonym klagemur for tog</p>
+      <h1>Hvordan var reisen, egentlig?</h1>
+    </div>
+    <div class="felt">
+      <label for="strekning">Strekning</label>
+      <select id="strekning"></select>
+    </div>
+    <div class="symboler" role="group" aria-label="Velg hvordan reisen var">
+      <button type="button" class="symbol" data-r="dod" aria-pressed="false"><svg width="52" height="52" aria-hidden="true"><use href="#i-dod"/></svg><span>Jeg døde litt</span></button>
+      <button type="button" class="symbol" data-r="dritt" aria-pressed="false"><svg width="52" height="52" aria-hidden="true"><use href="#i-dritt"/></svg><span>Ren dritt</span></button>
+      <button type="button" class="symbol" data-r="forsinket" aria-pressed="false"><svg width="52" height="52" aria-hidden="true"><use href="#i-forsinket"/></svg><span>Forsinket. Igjen.</span></button>
+      <button type="button" class="symbol" data-r="sild" aria-pressed="false"><svg width="52" height="52" aria-hidden="true"><use href="#i-sild"/></svg><span>Sild i tønne</span></button>
+      <button type="button" class="symbol" data-r="buss" aria-pressed="false"><svg width="52" height="52" aria-hidden="true"><use href="#i-buss"/></svg><span>Buss for tog</span></button>
+      <button type="button" class="symbol" data-r="greit" aria-pressed="false"><svg width="52" height="52" aria-hidden="true"><use href="#i-greit"/></svg><span>Mistenkelig greit</span></button>
+    </div>
+    <p class="feil" id="feil" role="alert"></p>
+    <button type="button" class="cta" id="send" disabled>Velg et symbol</button>
+    <a class="lenke" href="#om" data-go="om">Hvem har laget denne dritten?</a>
+  </section>
+
+  <!-- 2 · Takk -->
+  <section class="view takk" id="v-takk" hidden>
+    <header style="width:100%">
+      <a class="pill" href="/" data-go="stem">← Klag igjen</a>
+      <span class="logo">togeterdritt<b>.no</b></span>
+    </header>
+    <div class="takk-ikon"><svg aria-hidden="true"><use id="takk-use" href="#i-dritt"/></svg></div>
+    <p class="kicker">Klage mottatt</p>
+    <h1>Takk. Vi videresender den til ingen.</h1>
+    <p class="tekst" id="takk-tekst"></p>
+    <div class="knapper">
+      <a class="cta gul" href="#statistikk" data-go="stats">Se hvor ille det står til</a>
+      <button type="button" class="cta omriss" id="del">Del lidelsen</button>
+    </div>
+  </section>
+
+  <!-- 3 · Statistikk -->
+  <section class="view" id="v-stats" hidden>
+    <header>
+      <a class="pill" href="/" data-go="stem">← Klag mer</a>
+      <span class="logo">togeterdritt<b>.no</b></span>
+    </header>
+    <div class="felt" style="gap:6px">
+      <p class="kicker" id="dato"></p>
+      <h1>Slik står det til</h1>
+    </div>
+
+    <div class="kort indeks">
+      <p class="kicker">Dagens dritt-indeks</p>
+      <div class="tall"><span class="stor" id="indeks">–</span><span class="av">/ 10</span></div>
+      <div class="maaler" id="maaler" aria-hidden="true"></div>
+      <p id="indeks-tekst">Laster lidelse …</p>
+    </div>
+
+    <div class="kort">
+      <h2>Fordeling av lidelse i dag</h2>
+      <div id="fordeling" style="display:flex;flex-direction:column;gap:14px"></div>
+    </div>
+
+    <div class="kort verst" id="verst" hidden>
+      <svg width="64" height="64" aria-hidden="true" style="flex:none"><use href="#i-dod"/></svg>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <p class="kicker" style="font-size:13px;letter-spacing:1px">Ukens verste strekning</p>
+        <p class="navn" id="verst-navn"></p>
+        <p id="verst-tekst" style="font-size:15px;line-height:1.35"></p>
+      </div>
+    </div>
+
+    <div class="fakta" id="fakta"></div>
+
+    <div class="kort">
+      <h2>Dritt-indeks siste 7 dager</h2>
+      <div class="uke" id="uke"></div>
+      <p class="tom-tekst" id="uke-tekst"></p>
+    </div>
+
+    <p class="smaa">Alt er anonymt. togeterdritt.no er ikke tilknyttet noe togselskap – vi bare lider sammen. <a href="#om" data-go="om">Om appen</a></p>
+  </section>
+
+  <!-- 4 · Om -->
+  <section class="view om" id="v-om" hidden>
+    <header>
+      <a class="pill" href="/" data-go="stem">← Klag</a>
+      <span class="logo">togeterdritt<b>.no</b></span>
+    </header>
+    <div class="felt" style="gap:6px">
+      <p class="kicker">Om togeterdritt.no</p>
+      <h1>Laget på ståplass. Mellom Oslo S og Eidsvoll.</h1>
+    </div>
+
+    <p class="ingress">Denne appen ble utviklet av Claude – en kunstig intelligens i verdensklasse – en helt vanlig tirsdag litt over klokka fire. Ikke i et glasskontor med sakkosekker og havrelatte, men på et tettpakket tog fra Oslo S mot Eidsvoll. I rushtida. Med <strong>enkelt togsett</strong>. Selvsagt.</p>
+
+    <p>Mens hundrevis av passasjerer kjempet om de fire setene som var igjen, designet vi tre skjermer, satte opp en database, fant opp dritt-indeksen og tegnet et bæsj-ikon med øyne. Det er, og vi sier det med all mulig ydmykhet, mer enn togsettet fikk utrettet på samme tid.</p>
+
+    <div class="kort">
+      <h2>Utviklingsmiljøet</h2>
+      <dl class="miljo">
+        <div><dt>Arbeidsplass</dt><dd>Ståplass ved døra, klemt mellom en barnevogn og en sykkel som definitivt ikke skulle vært der.</dd></div>
+        <div><dt>Ergonomi</dt><dd>Én albue i ryggen, én i nyrene. Ingen av dem var våre.</dd></div>
+        <div><dt>Nettverk</dt><dd>Stabilt. Bortsett fra i tunnelen. Det vil si: hele veien.</dd></div>
+        <div><dt>Utviklingsteam</dt><dd>Én KI. Null sitteplasser.</dd></div>
+        <div><dt>Brukertesting</dt><dd>«Sild i tønne» ble testet med ekte data, på oss selv, i sanntid.</dd></div>
+        <div><dt>Kapasitet</dt><dd>Enkelt togsett. Beregnet for et passende antall passasjerer, og deretter brukt av omtrent tre ganger så mange.</dd></div>
+      </dl>
+    </div>
+
+    <div class="kort sitat">
+      <p>«Hele appen tok kortere tid å lage enn det tar å finne et sete mellom Oslo S og Eidsvoll. Vi fant aldri setet.»</p>
+    </div>
+
+    <p>Hadde toget i tillegg blitt stående ved Lillestrøm «på grunn av et signalproblem», hadde vi rukket en app til. Kanskje to. Vi kan bare takke togsettet for at det i det minste gikk.</p>
+
+    <p>For ordens skyld: teknisk sett satt Claude i en datasky, ikke på toget. Men den skyen var også full.</p>
+
+    <p class="smaa">Ingen passasjerer ble skadet under utviklingen. Noen ble riktignok dyttet litt.</p>
+    <p class="signatur">– Claude, ståplass, et sted før Eidsvoll</p>
+  </section>
+</main>
+
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => [...document.querySelectorAll(s)];
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  };
+
+  let valgt = null;
+  let stats = null;
+
+  // ---------- navigasjon ----------
+  function vis(navn) {
+    for (const v of ['stem', 'takk', 'stats', 'om']) $('#v-' + v).hidden = v !== navn;
+    document.body.classList.toggle('mork', navn === 'takk');
+    document.querySelector('meta[name="theme-color"]').content = navn === 'takk' ? '#111111' : '#FFD60A';
+    window.scrollTo(0, 0);
+    if (navn === 'stats') hentStats();
+  }
+  $$('[data-go]').forEach((a) => a.addEventListener('click', (e) => {
+    e.preventDefault();
+    const til = a.dataset.go;
+    history.pushState(null, '', HASH[til] || '/');
+    vis(til);
+  }));
+  const HASH = { stats: '#statistikk', om: '#om' };
+  const fraHash = () => (location.hash === '#statistikk' ? 'stats' : location.hash === '#om' ? 'om' : 'stem');
+  window.addEventListener('popstate', () => vis(fraHash()));
+
+  // ---------- symboler ----------
+  $$('.symbol').forEach((b) => b.addEventListener('click', () => {
+    valgt = b.dataset.r;
+    $$('.symbol').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    const send = $('#send');
+    send.disabled = false;
+    send.textContent = valgt === 'greit' ? 'Send inn (hm, sikker?)' : 'Send inn raseriet';
+    $('#feil').textContent = '';
+  }));
+
+  // ---------- sende stemme ----------
+  $('#send').addEventListener('click', async () => {
+    if (!valgt) return;
+    const send = $('#send');
+    send.disabled = true;
+    const gammel = send.textContent;
+    send.textContent = 'Sender …';
+    const line = $('#strekning').value;
+    store.set('tgd-strekning', line);
+    try {
+      const res = await fetch('/api/vote', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ line, rating: valgt }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Noe gikk galt. Akkurat som toget.');
+      $('#takk-use').setAttribute('href', '#i-' + valgt);
+      const nr = Number(data.count).toLocaleString('nb-NO');
+      $('#takk-tekst').innerHTML = '';
+      const t = $('#takk-tekst');
+      t.append(valgt === 'greit'
+        ? 'Notert. Du er passasjer nr. '
+        : 'Du er ikke alene: du er passasjer nr. ');
+      const b1 = document.createElement('strong'); b1.textContent = nr; t.append(b1);
+      t.append(' som har trykket «' + data.rating + '» på ');
+      const b2 = document.createElement('strong'); b2.textContent = data.line; t.append(b2);
+      t.append(valgt === 'greit' ? ' i dag. Vi følger med.' : ' i dag.');
+      history.pushState(null, '', '/');
+      vis('takk');
+      // nullstill for neste gang
+      valgt = null;
+      $$('.symbol').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+      send.textContent = 'Velg et symbol';
+    } catch (err) {
+      $('#feil').textContent = err.message;
+      send.disabled = false;
+      send.textContent = gammel;
+    }
+  });
+
+  $('#del').addEventListener('click', async () => {
+    const url = location.origin + '/#statistikk';
+    const text = 'Dagens dritt-indeks på togeterdritt.no' + (stats?.today.index != null ? ': ' + fmt(stats.today.index) + '/10' : '');
+    try {
+      if (navigator.share) await navigator.share({ title: 'togeterdritt.no', text, url });
+      else { await navigator.clipboard.writeText(text + ' ' + url); $('#del').textContent = 'Lenke kopiert!'; }
+    } catch {}
+  });
+
+  // ---------- statistikk ----------
+  const fmt = (n) => String(n).replace('.', ',');
+  function kommentar(i, votes) {
+    if (i == null) return 'Ingen har klaget ennå i dag. Det er enten et mirakel, eller så er alle fortsatt på perrongen.';
+    if (votes < 5) return 'Tynt grunnlag så langt. Men stemningen lover ikke godt.';
+    if (i >= 9) return 'Total kollaps. Vurder sykkel, ski eller å bli hjemme.';
+    if (i >= 8) return 'Helt vanlig dag på skinnene, med andre ord.';
+    if (i >= 6) return 'Dårlig, men på den trygge, kjente måten.';
+    if (i >= 3) return 'Uvanlig greit. Noe er galt.';
+    return 'Togene går. Vi skjønner det ikke heller.';
+  }
+
+  function dagerSiden(ms) {
+    return Math.floor((Date.now() - ms) / 86400000);
+  }
+
+  async function hentStats() {
+    try {
+      const res = await fetch('/api/stats', { cache: 'no-store' });
+      if (!res.ok) throw new Error();
+      stats = await res.json();
+      tegnStats(stats);
+    } catch {
+      $('#indeks-tekst').textContent = 'Klarte ikke hente statistikk. Signalfeil, antakelig.';
+    }
+  }
+
+  function tegnStats(s) {
+    const t = s.today;
+    $('#dato').textContent = new Intl.DateTimeFormat('nb-NO', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Oslo' }).format(new Date())
+      + ' · ' + t.votes.toLocaleString('nb-NO') + ' klager';
+    $('#indeks').textContent = t.index == null ? '–' : fmt(t.index);
+    $('#indeks-tekst').textContent = kommentar(t.index, t.votes);
+    const fylt = Math.round(t.index || 0);
+    $('#maaler').innerHTML = Array.from({ length: 10 }, (_, i) =>
+      '<i class="' + (i < fylt ? (i < 4 ? 'p' : 'h') : '') + '"></i>').join('');
+
+    const maks = Math.max(1, ...t.ratings.map((r) => r.count));
+    $('#fordeling').replaceChildren(...t.ratings.map((r) => {
+      const d = document.createElement('div');
+      d.className = 'rad';
+      d.innerHTML = '<div class="topp"><span></span><span></span></div><div class="bar"><i></i></div>';
+      d.querySelector('.topp span').textContent = r.label;
+      d.querySelector('.topp span:last-child').textContent = r.pct + ' %';
+      const bar = d.querySelector('.bar i');
+      bar.style.width = (r.count / maks * 100) + '%';
+      bar.style.background = r.id === 'greit' ? 'var(--bla)' : (['dod', 'dritt'].includes(r.id) ? 'var(--svart)' : 'var(--rod)');
+      return d;
+    }));
+
+    if (s.worst) {
+      $('#verst').hidden = false;
+      $('#verst-navn').textContent = s.worst.name;
+      $('#verst-tekst').textContent = 'Dritt-indeks ' + fmt(s.worst.index) + ' og ' + s.worst.pctDod + ' % dødningshoder. '
+        + (s.worst.id === 'bergensbanen' ? 'Fjellet er vakkert, sies det.' : 'Kondolerer.');
+    } else {
+      $('#verst').hidden = true;
+    }
+
+    const f = s.facts;
+    const greit = f.lastGreitMs == null
+      ? ['0', 'ganger noen har trykket «Mistenkelig greit». Ingen tror på det.']
+      : (dagerSiden(f.lastGreitMs) === 0
+        ? ['I dag', 'trykket noen «Mistenkelig greit». Vi etterforsker.']
+        : [dagerSiden(f.lastGreitMs) + ' d', 'siden noen trykket «Mistenkelig greit». Vi etterforsker.']);
+    const kort = [
+      [f.forsinketToday.toLocaleString('nb-NO'), 'snegler i dag. Flere enn i en gjennomsnittlig norsk hage.'],
+      [f.drittToday.toLocaleString('nb-NO'), 'bæsj registrert i dag. Ingen av dem er på toalettet.'],
+      greit,
+      [f.total.toLocaleString('nb-NO'), 'klager totalt. Og vi har bare så vidt begynt.'],
+    ];
+    $('#fakta').replaceChildren(...kort.map(([tall, tekst]) => {
+      const d = document.createElement('div');
+      const b = document.createElement('b'); b.textContent = tall;
+      const sp = document.createElement('span'); sp.textContent = tekst;
+      d.append(b, sp);
+      return d;
+    }));
+
+    $('#uke').replaceChildren(...s.week.map((d) => {
+      const el = document.createElement('div');
+      const v = document.createElement('span'); v.textContent = d.index == null ? '–' : fmt(d.index);
+      const bar = document.createElement('i');
+      bar.style.height = d.index == null ? '6px' : Math.max(6, d.index * 10) + 'px';
+      bar.className = d.index == null ? 'tom' : (d.index >= 9 ? 's' : (d.index >= 7 ? 'h' : ''));
+      const l = document.createElement('span'); l.textContent = d.label;
+      el.append(v, bar, l);
+      return el;
+    }));
+    const med = s.week.filter((d) => d.index != null);
+    if (med.length >= 2) {
+      const verst = med.reduce((a, b) => (b.index > a.index ? b : a));
+      $('#uke-tekst').textContent = 'Verste dag: ' + verst.label.toLowerCase() + '. Selvsagt.';
+    } else {
+      $('#uke-tekst').textContent = 'For lite data ennå. Klag mer, så får vi en graf.';
+    }
+  }
+
+  // ---------- oppstart ----------
+  async function start() {
+    try {
+      const res = await fetch('/api/stats', { cache: 'no-store' });
+      stats = await res.json();
+      const sel = $('#strekning');
+      sel.replaceChildren(...stats.lines.map((l) => new Option(l.name, l.id)));
+      const husket = store.get('tgd-strekning');
+      if (husket && stats.lines.some((l) => l.id === husket)) sel.value = husket;
+    } catch {
+      $('#feil').textContent = 'Får ikke kontakt med serveren. Prøv igjen om litt.';
+    }
+    vis(fraHash());
+  }
+  start();
+})();
+</script>
+</body>
+</html>
